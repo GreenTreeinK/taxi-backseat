@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>택시 뒷좌석 — 승객이 만드는 택시 리뷰</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Black+Han+Sans&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #f7f4ef;
+  --surface: #ffffff;
+  --surface2: #f0ece4;
+  --surface3: #e8e2d8;
+  --accent: #c0602a;
+  --accent-light: #f5ede7;
+  --accent2: #2a7c4f;
+  --text: #2c2416;
+  --text-muted: #9a8f7e;
+  --text-soft: #6b5f50;
+  --green: #2a7c4f;
+  --green-light: #e8f5ee;
+  --red: #c0602a;
+  --red-light: #f5ede7;
+  --border: #e2dbd0;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --radius: 18px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: #ede9e1;
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+.phone-wrap {
+  max-width: 420px;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 60px rgba(0,0,0,0.12);
+}
+
+/* STATUS */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 20px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  background: var(--bg);
+}
+
+/* HEADER */
+.app-header {
+  padding: 8px 20px 14px;
+  border-bottom: 1.5px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface);
+}
+.logo {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 22px;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+}
+.logo-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; letter-spacing: 0.3px; }
+.write-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(192,96,42,0.25);
+}
+.write-btn:hover { background: #a84e22; transform: translateY(-1px); }
+
+/* SCROLL */
+.scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* SCREENS */
+.nav-screen { display: none; }
+.nav-screen.active { display: block; animation: fadeUp 0.25s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* SEARCH */
+.search-section {
+  padding: 16px 20px 14px;
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+}
+.search-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.search-box { display: flex; gap: 8px; }
+.search-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--accent); background: #fff; }
+.search-input::placeholder { color: var(--text-muted); }
+.search-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.search-btn:hover { background: #a84e22; }
+
+/* STATS */
+.stats-bar {
+  padding: 14px 20px;
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+}
+.stat-item { flex: 1; text-align: center; border-right: 1.5px solid var(--border); }
+.stat-item:last-child { border-right: none; }
+.stat-num {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 20px;
+  color: var(--accent);
+}
+.stat-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+/* FILTER */
+.filter-row {
+  padding: 14px 20px 0;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+.fchip {
+  padding: 7px 14px;
+  border-radius: 30px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.fchip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.fchip:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+
+/* SECTION */
+.section-title {
+  padding: 16px 20px 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-soft);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.section-count { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+
+/* NOTICE */
+.notice-banner {
+  margin: 14px 20px 0;
+  background: var(--accent-light);
+  border: 1.5px solid #e8c9b8;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.notice-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.notice-text { font-size: 12px; color: var(--text-soft); line-height: 1.6; }
+.notice-text strong { color: var(--accent); font-weight: 700; }
+
+/* REVIEW CARDS */
+.review-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+
+.review-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.review-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(192,96,42,0.12);
+}
+.review-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  border-radius: 4px 0 0 4px;
+}
+.review-card.bad::before { background: #d94f2a; }
+.review-card.good::before { background: var(--green); }
+.review-card.neutral::before { background: #c8a84a; }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.plate-badge { display: flex; align-items: center; gap: 8px; }
+.plate {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 15px;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+.region-tag {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--surface2);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.card-meta { text-align: right; }
+.card-date { font-size: 11px; color: var(--text-muted); }
+.card-stars { font-size: 13px; color: #d4a017; margin-top: 2px; }
+
+.card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.ctag { font-size: 11px; padding: 3px 9px; border-radius: 10px; font-weight: 600; }
+.ctag.neg { background: var(--red-light); color: #c0602a; border: 1px solid #e8c9b8; }
+.ctag.pos { background: var(--green-light); color: #2a7c4f; border: 1px solid #b8dcc8; }
+.ctag.neu { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+
+.card-text { font-size: 13px; line-height: 1.7; color: var(--text-soft); }
+.card-text.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.card-author { font-size: 11px; color: var(--text-muted); }
+.card-likes {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: color 0.15s;
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+}
+.card-likes:hover { color: var(--accent); border-color: var(--accent); }
+.card-likes.liked { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
+
+/* LOADING / EMPTY */
+.loading-wrap { padding: 40px 20px; text-align: center; color: var(--text-muted); }
+.loading-spinner { font-size: 32px; animation: spin 1s linear infinite; display: block; margin-bottom: 12px; }
+@keyframes spin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+.empty-wrap { padding: 40px 20px; text-align: center; color: var(--text-muted); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+.empty-text { font-size: 14px; font-weight: 600; color: var(--text-soft); }
+.empty-sub { font-size: 12px; margin-top: 6px; }
+
+/* SEARCH RESULT */
+.search-result-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1.5px solid var(--border);
+  background: var(--surface);
+}
+.search-result-title { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.search-result-plate { font-family: 'Black Han Sans', sans-serif; font-size: 26px; color: var(--accent); margin-bottom: 12px; }
+.search-result-stats { display: flex; gap: 0; }
+.rs-stat { flex: 1; text-align: center; border-right: 1px solid var(--border); padding: 8px 0; }
+.rs-stat:last-child { border-right: none; }
+.rs-num { font-size: 20px; font-weight: 900; }
+.rs-num.good { color: var(--green); }
+.rs-num.bad { color: var(--red); }
+.rs-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+/* WRITE FORM */
+.write-screen { padding: 16px 20px; }
+.write-title { font-family: 'Black Han Sans', sans-serif; font-size: 22px; color: var(--text); margin-bottom: 4px; }
+.write-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+
+.form-section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 18px;
+  border: 1.5px solid var(--border);
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.form-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-soft);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.form-field { margin-bottom: 14px; }
+.form-field:last-child { margin-bottom: 0; }
+.form-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+  display: block;
+}
+.form-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  outline: none;
+  transition: all 0.2s;
+}
+.form-input:focus { border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(192,96,42,0.08); }
+.form-input::placeholder { color: var(--text-muted); }
+
+/* STAR SELECT */
+.star-select { display: flex; gap: 10px; margin-top: 4px; }
+.star-select span {
+  font-size: 34px;
+  cursor: pointer;
+  transition: all 0.15s;
+  filter: grayscale(1) opacity(0.25);
+  line-height: 1;
+}
+.star-select span.active { filter: none; transform: scale(1.15); }
+.star-select span:hover { filter: none; transform: scale(1.2); }
+
+/* TAGS */
+.tags-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+.stag {
+  padding: 7px 13px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text-muted);
+  font-weight: 600;
+  background: var(--surface2);
+}
+.stag:hover { border-color: var(--accent); color: var(--accent); }
+.stag.neg-sel { background: var(--red-light); border-color: #d4845c; color: var(--red); }
+.stag.pos-sel { background: var(--green-light); border-color: #6abf8a; color: var(--green); }
+
+/* SUBMIT */
+.submit-wrap { padding: 0 0 24px; }
+.submit-btn {
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  padding: 17px;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(192,96,42,0.3);
+}
+.submit-btn:hover { background: #a84e22; transform: translateY(-1px); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.submit-notice {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+/* MY PAGE */
+.my-hero {
+  background: linear-gradient(135deg, #c0602a 0%, #a84e22 100%);
+  padding: 28px 20px 24px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.my-avatar {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: 3px solid rgba(255,255,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; flex-shrink: 0;
+}
+.my-name { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+.my-sub { font-size: 12px; color: rgba(255,255,255,0.7); }
+.my-badge {
+  display: inline-block; margin-top: 6px;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+.my-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+}
+.my-stat { padding: 16px; text-align: center; border-right: 1.5px solid var(--border); }
+.my-stat:last-child { border-right: none; }
+.my-stat-num { font-family: 'Black Han Sans', sans-serif; font-size: 24px; color: var(--accent); }
+.my-stat-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+.menu-list { padding: 14px 20px; display: flex; flex-direction: column; gap: 8px; }
+.menu-item {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: var(--shadow);
+}
+.menu-item:hover { border-color: var(--accent); transform: translateX(2px); }
+.menu-icon { font-size: 20px; width: 28px; text-align: center; }
+.menu-text { flex: 1; }
+.menu-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.menu-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.menu-arrow { color: var(--text-muted); font-size: 18px; }
+
+/* NICKNAME MODAL */
+.nickname-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+  display: none;
+}
+.nickname-modal-overlay.active { display: flex; }
+.nickname-modal {
+  background: var(--surface);
+  border-radius: 24px;
+  padding: 28px 24px;
+  width: calc(100% - 48px);
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.nickname-modal-title {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 22px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.nickname-modal-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+.nickname-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  outline: none;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+.nickname-input:focus { border-color: var(--accent); background: #fff; }
+.nickname-confirm-btn {
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 15px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.15s;
+}
+.nickname-confirm-btn:hover { background: #a84e22; }
+
+/* LOGIN */
+.login-section {
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.login-title {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 22px;
+  color: var(--text);
+  text-align: center;
+}
+.login-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.7;
+}
+.google-login-btn {
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.15s;
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+.google-login-btn:hover {
+  border-color: #4285f4;
+  box-shadow: 0 4px 16px rgba(66,133,244,0.15);
+  transform: translateY(-1px);
+}
+.kakao-login-btn {
+  width: 100%;
+  background: #FEE500;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.15s;
+  box-shadow: var(--shadow);
+  color: #3C1E1E;
+  margin-top: 10px;
+}
+.kakao-login-btn:hover {
+  background: #f0d800;
+  box-shadow: 0 4px 16px rgba(254,229,0,0.4);
+  transform: translateY(-1px);
+}
+.auth-tabs {
+  display: flex;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+  margin-bottom: 4px;
+}
+.auth-tab {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  background: #fff;
+  border: none;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.auth-tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.auth-input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: 'Noto Sans KR', sans-serif;
+  background: #faf9f7;
+  color: var(--text);
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  outline: none;
+}
+.auth-input:focus {
+  border-color: var(--accent);
+  background: #fff;
+}
+.auth-submit-btn {
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: var(--shadow);
+}
+.auth-submit-btn:hover {
+  background: #a84e22;
+  transform: translateY(-1px);
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.google-icon {
+  width: 20px;
+  height: 20px;
+}
+.logout-btn {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text-soft);
+  transition: all 0.15s;
+}
+.logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* BOTTOM NAV */
+.bottom-nav {
+  background: var(--surface);
+  border-top: 1.5px solid var(--border);
+  display: flex;
+  padding: 10px 0 16px;
+  flex-shrink: 0;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 4px;
+  cursor: pointer; transition: all 0.15s; padding: 2px 0;
+}
+.nav-item.active .nav-icon { color: var(--accent); }
+.nav-item.active .nav-label { color: var(--accent); font-weight: 700; }
+.nav-icon { font-size: 20px; color: var(--text-muted); transition: color 0.15s; }
+.nav-label { font-size: 10px; color: var(--text-muted); font-weight: 500; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(44,36,22,0.5);
+  z-index: 200;
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: all; }
+.modal-sheet {
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  padding: 20px 24px 40px;
+  width: 100%; max-width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
+  position: relative;
+  scrollbar-width: none;
+}
+.modal-sheet::-webkit-scrollbar { display: none; }
+.modal-overlay.active .modal-sheet { transform: translateY(0); }
+.modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 18px; }
+.modal-close { position: absolute; top: 20px; right: 24px; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+.modal-plate { font-family: 'Black Han Sans', sans-serif; font-size: 26px; color: var(--accent); margin-bottom: 4px; }
+.modal-date { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+.modal-stars { font-size: 22px; color: #d4a017; margin-bottom: 14px; }
+.modal-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.modal-text { font-size: 14px; line-height: 1.8; color: var(--text-soft); margin-bottom: 16px; padding: 16px; background: var(--surface2); border-radius: 14px; border: 1px solid var(--border); }
+.modal-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 14px; border-top: 1px solid var(--border);
+}
+.modal-author { font-size: 12px; color: var(--text-muted); }
+.modal-like-btn {
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 8px 18px;
+  font-size: 12px; font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.15s; display: flex; align-items: center; gap: 5px;
+}
+.modal-like-btn:hover { border-color: var(--accent); color: var(--accent); }
+.modal-like-btn.liked { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text);
+  color: var(--bg);
+  padding: 12px 24px; border-radius: 30px;
+  font-size: 13px; font-weight: 600;
+  z-index: 300; opacity: 0;
+  transition: all 0.3s;
+  white-space: nowrap; max-width: 320px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="phone-wrap">
+
+  <div class="status-bar">
+    <span style="font-family:monospace;">9:41</span>
+    <div style="display:flex;gap:6px;font-size:13px;">📶🔋</div>
+  </div>
+
+  <div class="app-header">
+    <div>
+      <div class="logo"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:4px;">
+  <!-- 택시 차체 -->
+  <rect x="1" y="9" width="20" height="9" rx="2" fill="#8B4513"/>
+  <!-- 택시 지붕/창문 -->
+  <path d="M4 9 L6 4 L16 4 L18 9 Z" fill="#8B4513"/>
+  <!-- 앞유리 -->
+  <path d="M7 8.5 L8.5 5 L13.5 5 L15 8.5 Z" fill="#fff" opacity="0.7"/>
+  <!-- 뒷좌석 창문 (강조) -->
+  <rect x="13.5" y="5.5" width="3.5" height="3" rx="0.5" fill="#fff" opacity="0.9"/>
+  <!-- 택시 바퀴 -->
+  <circle cx="5.5" cy="18" r="2.5" fill="#2d1a0e"/>
+  <circle cx="16.5" cy="18" r="2.5" fill="#2d1a0e"/>
+  <!-- 택시 표시등 -->
+  <rect x="9" y="2" width="4" height="2" rx="1" fill="#F5A623"/>
+</svg> 택시 뒷좌석</div>
+      <div class="logo-sub">승객이 직접 만드는 택시 리뷰</div>
+    </div>
+    <button class="write-btn" onclick="switchNav('write')">✏️ 후기 쓰기</button>
+  </div>
+
+  <div class="scroll-area">
+
+    <!-- 홈 -->
+    <div class="nav-screen active" id="ns-home">
+      <div class="search-section">
+        <div class="search-label">🔍 번호판 검색</div>
+        <div class="search-box">
+          <input class="search-input" type="text" id="searchInput" placeholder="예) 서울 12가 3456">
+          <button class="search-btn" onclick="doSearch()">검색</button>
+        </div>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-num" id="totalReviews">-</div>
+          <div class="stat-label">총 리뷰</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="todayReviews">-</div>
+          <div class="stat-label">오늘 리뷰</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="totalPlates">-</div>
+          <div class="stat-label">등록 번호판</div>
+        </div>
+      </div>
+
+      <div class="notice-banner">
+        <div class="notice-icon">💡</div>
+        <div class="notice-text">
+          <strong>이렇게 사용하세요!</strong> 탑승 후 앞좌석의 <strong>택시 면허증</strong>을 확인해 번호판과 함께 후기를 남겨주세요.
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="fchip active" onclick="filterChip(this,'all')">전체</div>
+        <div class="fchip" onclick="filterChip(this,'bad')">😡 나쁜 리뷰</div>
+        <div class="fchip" onclick="filterChip(this,'good')">😊 좋은 리뷰</div>
+      </div>
+
+      <div class="section-title">
+        <span>📋 최근 후기</span>
+        <span class="section-count" id="reviewCount">불러오는 중...</span>
+      </div>
+
+      <div class="review-list" id="reviewList">
+        <div class="loading-wrap">
+          <span class="loading-spinner">⏳</span>
+          <div>리뷰를 불러오는 중...</div>
+        </div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+
+    <!-- 검색결과 -->
+    <div class="nav-screen" id="ns-search">
+      <div class="search-result-header">
+        <div class="search-result-title">검색 결과</div>
+        <div class="search-result-plate" id="srPlate">-</div>
+        <div class="search-result-stats">
+          <div class="rs-stat"><div class="rs-num" id="srTotal">0</div><div class="rs-label">총 리뷰</div></div>
+          <div class="rs-stat"><div class="rs-num bad" id="srAvg">-</div><div class="rs-label">평균 평점</div></div>
+          <div class="rs-stat"><div class="rs-num bad" id="srBad">0</div><div class="rs-label">나쁜 리뷰</div></div>
+          <div class="rs-stat"><div class="rs-num good" id="srGood">0</div><div class="rs-label">좋은 리뷰</div></div>
+        </div>
+      </div>
+      <div class="section-title"><span>해당 번호판 후기</span></div>
+      <div class="review-list" id="searchResultList">
+        <div class="loading-wrap"><span class="loading-spinner">⏳</span><div>검색 중...</div></div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+
+    <!-- 후기 작성 -->
+    <div class="nav-screen" id="ns-write">
+      <div class="write-screen">
+        <div class="write-title">✏️ 후기 작성</div>
+        <div class="write-sub">번호판을 입력하고 솔직한 경험을 남겨주세요.<br>다른 승객들에게 큰 도움이 됩니다.</div>
+
+        <div class="form-section">
+          <div class="form-section-title"><span>🚕</span> 차량 정보</div>
+          <div class="form-field">
+            <label class="form-label">번호판 *</label>
+            <input class="form-input" type="text" id="wPlate" placeholder="예) 서울 12가 3456">
+          </div>
+          <div class="form-field">
+            <label class="form-label">탑승 지역</label>
+            <div style="display:flex;gap:8px;">
+              <select class="form-input" id="wRegionSido" onchange="updateDistrict()" style="flex:1;">
+                <option value="">시/도 선택</option>
+                <option>서울</option><option>경기</option><option>인천</option>
+                <option>부산</option><option>대구</option><option>광주</option>
+                <option>대전</option><option>울산</option><option>세종</option>
+                <option>강원</option><option>충북</option><option>충남</option>
+                <option>전북</option><option>전남</option><option>경북</option>
+                <option>경남</option><option>제주</option>
+              </select>
+              <select class="form-input" id="wRegionDistrict" style="flex:1;">
+                <option value="">구/군 선택</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title"><span>⭐</span> 별점 *</div>
+          <div class="star-select" id="starSelect">
+            <span onclick="setStar(1)">⭐</span>
+            <span onclick="setStar(2)">⭐</span>
+            <span onclick="setStar(3)">⭐</span>
+            <span onclick="setStar(4)">⭐</span>
+            <span onclick="setStar(5)">⭐</span>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title"><span>🏷️</span> 경험 태그</div>
+          <div class="form-label" style="margin-bottom:8px;">😡 부정적</div>
+          <div class="tags-grid" style="margin-bottom:14px;">
+            <div class="stag" onclick="toggleStag(this,'neg')">🚗 난폭운전</div>
+            <div class="stag" onclick="toggleStag(this,'neg')">💬 불친절</div>
+            <div class="stag" onclick="toggleStag(this,'neg')">📱 통화중운전</div>
+            <div class="stag" onclick="toggleStag(this,'neg')">🌡️ 실내불쾌</div>
+            <div class="stag" onclick="toggleStag(this,'neg')">🗺️ 길 모름</div>
+            <div class="stag" onclick="toggleStag(this,'neg')">💰 요금 바가지</div>
+            <div class="stag" onclick="toggleStag(this,'neg')">🚬 담배냄새</div>
+            <div class="stag" onclick="toggleStag(this,'neg')">🔊 소음</div>
+          </div>
+          <div class="form-label" style="margin-bottom:8px;">😊 긍정적</div>
+          <div class="tags-grid">
+            <div class="stag" onclick="toggleStag(this,'pos')">😊 친절해요</div>
+            <div class="stag" onclick="toggleStag(this,'pos')">🛣️ 안전운전</div>
+            <div class="stag" onclick="toggleStag(this,'pos')">✨ 차 깨끗해요</div>
+            <div class="stag" onclick="toggleStag(this,'pos')">🎵 조용해요</div>
+            <div class="stag" onclick="toggleStag(this,'pos')">⚡ 빠른 이동</div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title"><span>📝</span> 상세 후기 *</div>
+          <textarea class="form-input" id="wContent" rows="4" placeholder="탑승 경험을 솔직하게 알려주세요. 다른 승객들에게 큰 도움이 됩니다."></textarea>
+        </div>
+
+
+
+        <div class="submit-wrap">
+          <button class="submit-btn" id="submitBtn" onclick="submitReview()">
+            🪑 후기 등록하기
+          </button>
+          <div class="submit-notice">
+            허위 사실 작성 시 법적 책임이 있을 수 있습니다.<br>
+            사실에 기반한 경험만 작성해주세요.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 내 후기 화면 -->
+    <div class="nav-screen" id="ns-myreviews">
+      <div class="search-result-header">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <button onclick="switchNav('my')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">‹</button>
+          <div class="search-result-title">MY REVIEWS</div>
+        </div>
+        <div class="search-result-plate">내가 쓴 후기</div>
+      </div>
+      <div class="section-title">
+        <span id="myReviewsTitle">내 후기 목록</span>
+        <span class="section-count" id="myReviewsCount"></span>
+      </div>
+      <div class="review-list" id="myReviewList">
+        <div class="loading-wrap"><span class="loading-spinner">⏳</span><div>불러오는 중...</div></div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+
+    <!-- 마이 -->
+    <div class="nav-screen" id="ns-my">
+
+      <!-- 로그인 전 -->
+      <div id="my-logged-out">
+        <div class="my-hero">
+          <div class="my-avatar">🙂</div>
+          <div>
+            <div class="my-name">로그인이 필요해요</div>
+            <div class="my-sub">구글 계정으로 간편하게 시작하세요</div>
+          </div>
+        </div>
+        <div class="login-section">
+          <div class="login-sub">로그인하면 내가 쓴 후기를 모아보고<br>다양한 기능을 사용할 수 있어요 🚕</div>
+
+          <!-- 로그인 / 회원가입 탭 -->
+          <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">로그인</button>
+            <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">회원가입</button>
+          </div>
+
+          <!-- 로그인 폼 -->
+          <div class="auth-form" id="form-login">
+            <input class="auth-input" id="login-email" type="email" placeholder="이메일" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')">
+            <input class="auth-input" id="login-password" type="password" placeholder="비밀번호" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')">
+            <button class="auth-submit-btn" onclick="loginWithEmail()">로그인</button>
+            <div class="auth-divider">또는 소셜 계정으로</div>
+            <button class="google-login-btn" onclick="loginWithGoogle()">
+              <svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Google로 계속하기
+            </button>
+            <button class="kakao-login-btn" onclick="loginWithKakao()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3C7.03 3 3 6.36 3 10.5c0 2.67 1.69 5.02 4.25 6.37L6.3 20.1c-.08.28.21.5.46.35l4.07-2.7c.38.04.77.05 1.17.05 4.97 0 9-3.36 9-7.5S16.97 3 12 3z" fill="#3C1E1E"/></svg>
+              카카오로 계속하기
+            </button>
+          </div>
+
+          <!-- 회원가입 폼 -->
+          <div class="auth-form" id="form-signup" style="display:none;">
+            <input class="auth-input" id="signup-email" type="email" placeholder="이메일" autocomplete="email">
+            <input class="auth-input" id="signup-password" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="new-password">
+            <input class="auth-input" id="signup-password2" type="password" placeholder="비밀번호 확인" autocomplete="new-password">
+            <button class="auth-submit-btn" onclick="signupWithEmail()">회원가입</button>
+            <div class="auth-divider">또는 소셜 계정으로</div>
+            <button class="google-login-btn" onclick="loginWithGoogle()">
+              <svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Google로 계속하기
+            </button>
+            <button class="kakao-login-btn" onclick="loginWithKakao()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3C7.03 3 3 6.36 3 10.5c0 2.67 1.69 5.02 4.25 6.37L6.3 20.1c-.08.28.21.5.46.35l4.07-2.7c.38.04.77.05 1.17.05 4.97 0 9-3.36 9-7.5S16.97 3 12 3z" fill="#3C1E1E"/></svg>
+              카카오로 계속하기
+            </button>
+          </div>
+        </div>
+        <div class="menu-list">
+          <div class="menu-item" onclick="showToast('로그인 후 이용할 수 있어요 🙏')">
+            <div class="menu-icon">✏️</div>
+            <div class="menu-text"><div class="menu-title">내가 쓴 후기</div><div class="menu-sub">로그인 후 이용 가능</div></div>
+            <div class="menu-arrow">›</div>
+          </div>
+          <div class="menu-item" onclick="showToast('사실 기반 후기만, 욕설 금지!')">
+            <div class="menu-icon">📜</div>
+            <div class="menu-text"><div class="menu-title">커뮤니티 규칙</div><div class="menu-sub">사실 기반 후기 · 욕설 금지</div></div>
+            <div class="menu-arrow">›</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 로그인 후 -->
+      <div id="my-logged-in" style="display:none;">
+        <div class="my-hero">
+          <div class="my-avatar" id="myAvatar">🙂</div>
+          <div>
+            <div class="my-name" id="myName">-</div>
+            <div class="my-sub" id="myEmail">-</div>
+            <div class="my-badge" id="myBadge">✓ 로그인됨</div>
+          </div>
+        </div>
+        <div class="my-stats">
+          <div class="my-stat"><div class="my-stat-num" id="myReviewCount">0</div><div class="my-stat-label">내 후기</div></div>
+          <div class="my-stat"><div class="my-stat-num">0</div><div class="my-stat-label">받은 좋아요</div></div>
+          <div class="my-stat"><div class="my-stat-num">-</div><div class="my-stat-label">저장 리뷰</div></div>
+        </div>
+        <div class="menu-list">
+          <div class="menu-item" onclick="goToMyReviews()">
+            <div class="menu-icon">✏️</div>
+            <div class="menu-text"><div class="menu-title">내가 쓴 후기</div><div class="menu-sub">작성한 후기 모아보기</div></div>
+            <div class="menu-arrow">›</div>
+          </div>
+
+
+          <div class="menu-item" onclick="showToast('사실 기반 후기만, 욕설 금지!')">
+            <div class="menu-icon">📜</div>
+            <div class="menu-text"><div class="menu-title">커뮤니티 규칙</div><div class="menu-sub">사실 기반 후기 · 욕설 금지</div></div>
+            <div class="menu-arrow">›</div>
+          </div>
+          <div class="menu-item" onclick="logout()">
+            <div class="menu-icon">🚪</div>
+            <div class="menu-text"><div class="menu-title" style="color:#c0602a;">로그아웃</div><div class="menu-sub">계정에서 로그아웃</div></div>
+            <div class="menu-arrow">›</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:20px;"></div>
+    </div>
+
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="switchNav('home')">
+      <div class="nav-icon">🏠</div><div class="nav-label">홈</div>
+    </div>
+    <div class="nav-item" id="nav-write" onclick="switchNav('write')">
+      <div class="nav-icon">✏️</div><div class="nav-label">후기쓰기</div>
+    </div>
+    <div class="nav-item" id="nav-my" onclick="switchNav('my')">
+      <div class="nav-icon">👤</div><div class="nav-label">마이</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <span class="modal-close" onclick="closeModalDirect()">✕</span>
+    <div class="modal-plate" id="mPlate">-</div>
+    <div class="modal-date" id="mDate">-</div>
+    <div class="modal-stars" id="mStars">-</div>
+    <div class="modal-tags" id="mTags"></div>
+    <div class="modal-text" id="mText">-</div>
+    <div class="modal-footer">
+      <span class="modal-author" id="mAuthor">-</span>
+      <button class="modal-like-btn" id="mLikeBtn" onclick="toggleModalLike()">
+        👍 <span id="mLikeCount">0</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 닉네임 설정 모달 -->
+<div class="nickname-modal-overlay" id="nicknameModal">
+  <div class="nickname-modal">
+    <div class="nickname-modal-title">닉네임을 설정해요 👤</div>
+    <div class="nickname-modal-sub">택시 후기 작성 시 사용할 닉네임이에요.<br>2~10자로 입력해주세요.</div>
+    <input class="nickname-input" id="nicknameInput" type="text" placeholder="닉네임 입력 (2~10자)" maxlength="10">
+    <button class="nickname-confirm-btn" onclick="saveNickname()">설정 완료</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://ltcydbloqgjlyimqzlro.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_hXwaBYY3-fwuOgGEyTfBuw_qJJPAYx_';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let selectedStar = 0;
+let currentFilter = 'all';
+let currentModalId = null;
+let currentUser = null;
+
+// 카카오 세션 복원
+const savedKakaoUser = localStorage.getItem('kakao_user');
+if (savedKakaoUser) {
+  try {
+    const ku = JSON.parse(savedKakaoUser);
+    currentUser = { id: ku.id, user_metadata: { full_name: ku.nickname, provider: 'kakao' }, provider: 'kakao' };
+  } catch(e) {}
+}
+
+// 카카오 로그인 리다이렉트 콜백 감지 (authorize 방식)
+const _urlParams = new URLSearchParams(window.location.search);
+const _kakaoCode = _urlParams.get('code');
+if (_kakaoCode && !localStorage.getItem('kakao_user')) {
+  // DOMContentLoaded 후 처리 (showToast 등 함수 준비 후)
+  window.addEventListener('DOMContentLoaded', () => {
+    handleKakaoCallback(_kakaoCode);
+    // 자동완성으로 채워진 폼 초기화
+    setTimeout(() => {
+      ['login-email','login-password','signup-email','signup-password','signup-password2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+    }, 100);
+  });
+}
+
+// 인증 상태 감지
+db.auth.onAuthStateChange((event, session) => {
+  currentUser = session?.user || null;
+  updateMyPage();
+  if (event === 'SIGNED_IN') {
+    const saved = localStorage.getItem('taxi_nickname');
+    if (saved) {
+      // 이미 닉네임 있으면 바로 로그인 완료
+      showToast('로그인되었어요! 🎉');
+      switchNav('my');
+    } else {
+      // 처음 로그인: Google 이름을 기본값으로 모달 표시
+      const googleName = session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || '';
+      showNicknameModal(googleName);
+    }
+  }
+  if (event === 'SIGNED_OUT') {
+    showToast('로그아웃되었어요');
+  }
+});
+
+function showNicknameModal(defaultNickname = '') {
+  const saved = localStorage.getItem('taxi_nickname');
+  if (saved) {
+    // 이미 닉네임 있으면 모달 안 띄우고 바로 완료
+    showToast('로그인되었어요! 🎉');
+    switchNav('my');
+    return;
+  }
+  const input = document.getElementById('nicknameInput');
+  input.value = defaultNickname;
+  document.getElementById('nicknameModal').classList.add('active');
+  input.focus();
+  input.select();
+}
+
+function saveNickname() {
+  const val = document.getElementById('nicknameInput').value.trim();
+  if (val.length < 2) { showToast('닉네임은 2자 이상이에요'); return; }
+  localStorage.setItem('taxi_nickname', val);
+  document.getElementById('nicknameModal').classList.remove('active');
+  showToast('닉네임이 설정됐어요! 🎉');
+  updateMyPage();
+  switchNav('my');
+}
+
+function getNickname() {
+  return localStorage.getItem('taxi_nickname') || 
+    currentUser?.user_metadata?.full_name || 
+    currentUser?.email?.split('@')[0] || '익명';
+}
+
+// 카카오 JS SDK 직접 연동 (이메일 없이 닉네임만 사용)
+const KAKAO_JS_KEY = '4b3c909db36393435377726603c24c47'; // JavaScript 키
+
+function initKakaoSDK() {
+  if (window.Kakao && !window.Kakao.isInitialized()) {
+    window.Kakao.init(KAKAO_JS_KEY);
+  }
+}
+
+function loginWithKakao() {
+  initKakaoSDK();
+  if (!window.Kakao || !window.Kakao.isInitialized()) {
+    showToast('카카오 SDK 로딩 중...');
+    setTimeout(loginWithKakao, 500);
+    return;
+  }
+  // SDK v2.7.2+: Kakao.Auth.login() 제거됨 → authorize() 사용
+  window.Kakao.Auth.authorize({
+    redirectUri: 'https://jocular-travesseiro-f9b589.netlify.app/',
+    scope: 'profile_nickname,profile_image'
+  });
+}
+
+// 카카오 로그인 리다이렉트 콜백 처리
+async function handleKakaoCallback(code) {
+  if (!code) return;
+  try {
+    showToast('카카오 로그인 처리 중...');
+    // 인가 코드로 토큰 요청
+    const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: '4b3c909db36393435377726603c24c47',
+        redirect_uri: 'https://jocular-travesseiro-f9b589.netlify.app/',
+        code: code
+      })
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) {
+      showToast('토큰 발급 실패 😢');
+      console.error(tokenData);
+      return;
+    }
+    // 액세스 토큰으로 사용자 정보 요청
+    const userRes = await fetch('https://kapi.kakao.com/v2/user/me', {
+      headers: { 'Authorization': 'Bearer ' + tokenData.access_token }
+    });
+    const userData = await userRes.json();
+    const kakaoNickname = userData.kakao_account?.profile?.nickname || userData.properties?.nickname || '';
+    const kakaoId = String(userData.id);
+    localStorage.setItem('kakao_user', JSON.stringify({ id: kakaoId, nickname: kakaoNickname, provider: 'kakao' }));
+    currentUser = { id: kakaoId, user_metadata: { full_name: kakaoNickname, provider: 'kakao' }, provider: 'kakao' };
+    // URL에서 code 파라미터 제거
+    window.history.replaceState({}, document.title, '/');
+    updateMyPage();
+    // 닉네임 설정 모달 표시 (카카오 닉네임을 기본값으로)
+    showNicknameModal(kakaoNickname);
+  } catch (err) {
+    showToast('카카오 로그인 오류 😢');
+    console.error(err);
+  }
+}
+
+// 탭 전환
+function switchAuthTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('form-login').style.display = tab === 'login' ? 'flex' : 'none';
+  document.getElementById('form-signup').style.display = tab === 'signup' ? 'flex' : 'none';
+}
+
+// 이메일 로그인
+async function loginWithEmail() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { showToast('이메일과 비밀번호를 입력해주세요'); return; }
+  showToast('로그인 중...');
+  const { error } = await db.auth.signInWithPassword({ email, password });
+  if (error) {
+    if (error.message.includes('Invalid login')) showToast('이메일 또는 비밀번호가 틀렸어요 😢');
+    else if (error.message.includes('Email not confirmed')) showToast('이메일 인증을 완료한 후 로그인해주세요 📧');
+    else showToast('로그인 실패: ' + error.message);
+  }
+}
+
+// 이메일 회원가입
+async function signupWithEmail() {
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const password2 = document.getElementById('signup-password2').value;
+  if (!email || !password) { showToast('이메일과 비밀번호를 입력해주세요'); return; }
+  if (password.length < 6) { showToast('비밀번호는 6자 이상이에요'); return; }
+  if (password !== password2) { showToast('비밀번호가 일치하지 않아요'); return; }
+  showToast('회원가입 중...');
+  const { error } = await db.auth.signUp({ email, password });
+  if (error) {
+    if (error.message.includes('already registered')) showToast('이미 가입된 이메일이에요. 로그인해주세요!');
+    else showToast('회원가입 실패: ' + error.message);
+  } else {
+    showEmailVerificationScreen(email);
+  }
+}
+
+async function loginWithGoogle() {
+  const { error } = await db.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: 'https://jocular-travesseiro-f9b589.netlify.app',
+      queryParams: {
+        prompt: 'select_account'  // 매번 계정 선택 화면 강제 표시
+      }
+    }
+  });
+  if (error) showToast('로그인 실패: ' + error.message);
+}
+
+async function logout() {
+  localStorage.removeItem('kakao_user');
+  await db.auth.signOut();
+}
+
+async function goToMyReviews() {
+  if (!currentUser) { showToast('로그인이 필요해요 🙏'); return; }
+  switchNav('myreviews');
+  const list = document.getElementById('myReviewList');
+  list.innerHTML = '<div class="loading-wrap"><span class="loading-spinner">⏳</span><div>불러오는 중...</div></div>';
+  const name = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || '승객';
+  try {
+    const { data, error } = await db.from('reviews').select('*')
+      .eq('author', name)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    const reviews = data || [];
+    document.getElementById('myReviewsCount').textContent = `총 ${reviews.length}건`;
+    if (reviews.length === 0) {
+      list.innerHTML = `<div class="empty-wrap"><span class="empty-icon">✏️</span><div class="empty-text">아직 쓴 후기가 없어요</div><div class="empty-sub">첫 후기를 남겨보세요!</div></div>`;
+      return;
+    }
+    list.innerHTML = reviews.map(reviewCardHTML).join('');
+  } catch(e) {
+    list.innerHTML = `<div class="empty-wrap"><span class="empty-icon">⚠️</span><div class="empty-text">불러오기 실패</div></div>`;
+  }
+}
+
+async function updateMyPage() {
+  if (currentUser) {
+    document.getElementById('my-logged-out').style.display = 'none';
+    document.getElementById('my-logged-in').style.display = 'block';
+    const name = getNickname();
+    document.getElementById('myName').textContent = name;
+    document.getElementById('myEmail').textContent = currentUser.email || '';
+    document.getElementById('myAvatar').textContent = '😊';
+  } else {
+    document.getElementById('my-logged-out').style.display = 'block';
+    document.getElementById('my-logged-in').style.display = 'none';
+  }
+}
+
+const DISTRICTS = {
+  '서울': ['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'],
+  '경기': ['수원시','성남시','의정부시','안양시','부천시','광명시','평택시','동두천시','안산시','고양시','과천시','구리시','남양주시','오산시','시흥시','군포시','의왕시','하남시','용인시','파주시','이천시','안성시','김포시','화성시','광주시','양주시','포천시','여주시','연천군','가평군','양평군'],
+  '인천': ['중구','동구','미추홀구','연수구','남동구','부평구','계양구','서구','강화군','옹진군'],
+  '부산': ['중구','서구','동구','영도구','부산진구','동래구','남구','북구','해운대구','사하구','금정구','강서구','연제구','수영구','사상구','기장군'],
+  '대구': ['중구','동구','서구','남구','북구','수성구','달서구','달성군'],
+  '광주': ['동구','서구','남구','북구','광산구'],
+  '대전': ['동구','중구','서구','유성구','대덕구'],
+  '울산': ['중구','남구','동구','북구','울주군'],
+  '세종': ['세종시'],
+  '강원': ['춘천시','원주시','강릉시','동해시','태백시','속초시','삼척시','홍천군','횡성군','영월군','평창군','정선군','철원군','화천군','양구군','인제군','고성군','양양군'],
+  '충북': ['청주시','충주시','제천시','보은군','옥천군','영동군','증평군','진천군','괴산군','음성군','단양군'],
+  '충남': ['천안시','공주시','보령시','아산시','서산시','논산시','계룡시','당진시','금산군','부여군','서천군','청양군','홍성군','예산군','태안군'],
+  '전북': ['전주시','군산시','익산시','정읍시','남원시','김제시','완주군','진안군','무주군','장수군','임실군','순창군','고창군','부안군'],
+  '전남': ['목포시','여수시','순천시','나주시','광양시','담양군','곡성군','구례군','고흥군','보성군','화순군','장흥군','강진군','해남군','영암군','무안군','함평군','영광군','장성군','완도군','진도군','신안군'],
+  '경북': ['포항시','경주시','김천시','안동시','구미시','영주시','영천시','상주시','문경시','경산시','군위군','의성군','청송군','영양군','영덕군','청도군','고령군','성주군','칠곡군','예천군','봉화군','울진군','울릉군'],
+  '경남': ['창원시','진주시','통영시','사천시','김해시','밀양시','거제시','양산시','의령군','함안군','창녕군','고성군','남해군','하동군','산청군','함양군','거창군','합천군'],
+  '제주': ['제주시','서귀포시']
+};
+
+function updateDistrict() {
+  const sido = document.getElementById('wRegionSido').value;
+  const districtEl = document.getElementById('wRegionDistrict');
+  districtEl.innerHTML = '<option value="">구/군 선택</option>';
+  if (sido && DISTRICTS[sido]) {
+    DISTRICTS[sido].forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d; opt.textContent = d;
+      districtEl.appendChild(opt);
+    });
+  }
+}
+
+function setStar(n) {
+  selectedStar = n;
+  document.querySelectorAll('#starSelect span').forEach((s, i) => s.classList.toggle('active', i < n));
+}
+
+function starsToEmoji(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+function toggleStag(el, type) {
+  if (type === 'neg') { el.classList.toggle('neg-sel'); el.classList.remove('pos-sel'); }
+  else { el.classList.toggle('pos-sel'); el.classList.remove('neg-sel'); }
+}
+
+function getSelectedTags() {
+  return Array.from(document.querySelectorAll('.stag.neg-sel, .stag.pos-sel')).map(el => el.textContent.trim());
+}
+
+function switchNav(tab) {
+  document.querySelectorAll('.nav-screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('ns-' + tab).classList.add('active');
+  document.getElementById('nav-' + tab)?.classList.add('active');
+  document.querySelector('.scroll-area').scrollTop = 0;
+  if (tab === 'home') loadReviews();
+}
+
+function formatDate(d) {
+  const dt = new Date(d);
+  return `${dt.getFullYear()}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')}`;
+}
+
+function getCardType(r) { if (r >= 4) return 'good'; if (r <= 2) return 'bad'; return 'neutral'; }
+
+const posTags = ['😊 친절해요','🛣️ 안전운전','✨ 차 깨끗해요','🎵 조용해요','⚡ 빠른 이동'];
+function tagHTML(tag) {
+  const isPos = posTags.includes(tag);
+  return `<span class="ctag ${isPos ? 'pos' : 'neg'}">${tag}</span>`;
+}
+
+function reviewCardHTML(r) {
+  const type = getCardType(r.rating);
+  const tags = (r.tags || []).map(tagHTML).join('');
+  const safeR = encodeURIComponent(JSON.stringify(r));
+  return `
+    <div class="review-card ${type}" onclick="openModalFromStr('${safeR}')">
+      <div class="card-header">
+        <div class="plate-badge">
+          <div class="plate">${r.plate}</div>
+          ${r.region ? `<div class="region-tag">${r.region}</div>` : ''}
+        </div>
+        <div class="card-meta">
+          <div class="card-date">${formatDate(r.created_at)}</div>
+          <div class="card-stars">${starsToEmoji(r.rating)}</div>
+        </div>
+      </div>
+      ${tags ? `<div class="card-tags">${tags}</div>` : ''}
+      <div class="card-text clamp">${r.content}</div>
+      <div class="card-footer">
+        <span class="card-author">${r.author || '익명'}</span>
+        <span class="card-likes" onclick="event.stopPropagation(); quickLike(this, '${r.id}', ${r.likes || 0})">👍 ${r.likes || 0}</span>
+      </div>
+    </div>`;
+}
+
+async function loadReviews() {
+  const list = document.getElementById('reviewList');
+  list.innerHTML = '<div class="loading-wrap"><span class="loading-spinner">⏳</span><div>리뷰를 불러오는 중...</div></div>';
+  try {
+    let query = db.from('reviews').select('*').order('created_at', { ascending: false });
+    if (currentFilter === 'bad') query = query.lte('rating', 2);
+    if (currentFilter === 'good') query = query.gte('rating', 4);
+    const { data, error } = await query;
+    if (error) throw error;
+    const reviews = data || [];
+    document.getElementById('totalReviews').textContent = reviews.length;
+    document.getElementById('reviewCount').textContent = `총 ${reviews.length}건`;
+    const today = new Date().toDateString();
+    const todayCount = reviews.filter(r => new Date(r.created_at).toDateString() === today).length;
+    document.getElementById('todayReviews').textContent = '오늘 ' + todayCount;
+    const plates = new Set(reviews.map(r => r.plate));
+    document.getElementById('totalPlates').textContent = plates.size;
+    if (reviews.length === 0) {
+      list.innerHTML = `<div class="empty-wrap"><span class="empty-icon">🪑</span><div class="empty-text">아직 후기가 없어요</div><div class="empty-sub">첫 번째 후기를 남겨주세요!</div></div>`;
+      return;
+    }
+    list.innerHTML = reviews.map(reviewCardHTML).join('');
+  } catch(e) {
+    list.innerHTML = `<div class="empty-wrap"><span class="empty-icon">⚠️</span><div class="empty-text">불러오기 실패</div><div class="empty-sub">${e.message}</div></div>`;
+  }
+}
+
+function filterChip(el, type) {
+  document.querySelectorAll('.fchip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = type;
+  loadReviews();
+}
+
+async function doSearch() {
+  const val = document.getElementById('searchInput').value.trim();
+  if (!val) { showToast('번호판을 입력해주세요 🔍'); return; }
+  document.getElementById('srPlate').textContent = val;
+  switchNav('search');
+  const list = document.getElementById('searchResultList');
+  list.innerHTML = '<div class="loading-wrap"><span class="loading-spinner">⏳</span><div>검색 중...</div></div>';
+  try {
+    const { data, error } = await db.from('reviews').select('*').ilike('plate', `%${val}%`).order('created_at', { ascending: false });
+    if (error) throw error;
+    const reviews = data || [];
+    document.getElementById('srTotal').textContent = reviews.length;
+    if (reviews.length > 0) {
+      const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
+      document.getElementById('srAvg').textContent = avg;
+      document.getElementById('srBad').textContent = reviews.filter(r => r.rating <= 2).length;
+      document.getElementById('srGood').textContent = reviews.filter(r => r.rating >= 4).length;
+    } else {
+      document.getElementById('srAvg').textContent = '-';
+      document.getElementById('srBad').textContent = '0';
+      document.getElementById('srGood').textContent = '0';
+    }
+    if (reviews.length === 0) {
+      list.innerHTML = `<div class="empty-wrap"><span class="empty-icon">🔍</span><div class="empty-text">검색 결과가 없어요</div><div class="empty-sub">이 번호판의 첫 후기를 남겨주세요!</div></div>`;
+      return;
+    }
+    list.innerHTML = reviews.map(reviewCardHTML).join('');
+  } catch(e) {
+    list.innerHTML = `<div class="empty-wrap"><span class="empty-icon">⚠️</span><div class="empty-text">검색 실패</div></div>`;
+  }
+}
+
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+async function submitReview() {
+  const plate = document.getElementById('wPlate').value.trim();
+  const content = document.getElementById('wContent').value.trim();
+  if (!plate) { showToast('번호판을 입력해주세요 🚕'); return; }
+  if (!selectedStar) { showToast('별점을 선택해주세요 ⭐'); return; }
+  if (!content) { showToast('후기 내용을 입력해주세요 ✏️'); return; }
+  if (!currentUser) { showToast('로그인 후 후기를 작성할 수 있어요 🙏'); switchNav('my'); return; }
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = '등록 중...';
+  try {
+    const { error } = await db.from('reviews').insert({
+      plate, region: (() => { const s = document.getElementById('wRegionSido').value; const d = document.getElementById('wRegionDistrict').value; return s ? (d ? s+' '+d : s) : null; })(),
+      rating: selectedStar, tags: getSelectedTags(), content,
+      author: getNickname(), likes: 0
+    });
+    if (error) throw error;
+    showToast('후기가 등록되었습니다! 🎉');
+    document.getElementById('wPlate').value = '';
+    document.getElementById('wRegionSido').value = '';
+    document.getElementById('wRegionDistrict').innerHTML = '<option value="">구/군 선택</option>';
+    document.getElementById('wContent').value = '';
+    selectedStar = 0;
+    document.querySelectorAll('#starSelect span').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.stag').forEach(s => { s.classList.remove('neg-sel'); s.classList.remove('pos-sel'); });
+    setTimeout(() => switchNav('home'), 1000);
+  } catch(e) {
+    showToast('등록 실패: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.innerHTML = '🪑 후기 등록하기';
+  }
+}
+
+async function quickLike(el, id, currentLikes) {
+  const liked = el.classList.toggle('liked');
+  const newLikes = liked ? currentLikes + 1 : currentLikes - 1;
+  el.textContent = '👍 ' + newLikes;
+  await db.from('reviews').update({ likes: newLikes }).eq('id', id);
+}
+
+function openModalFromStr(encoded) {
+  const r = JSON.parse(decodeURIComponent(encoded));
+  openModal(r);
+}
+
+function openModal(r) {
+  currentModalId = r.id;
+  document.getElementById('mPlate').textContent = r.plate;
+  document.getElementById('mDate').textContent = formatDate(r.created_at);
+  document.getElementById('mStars').textContent = starsToEmoji(r.rating);
+  document.getElementById('mText').textContent = r.content;
+  document.getElementById('mAuthor').textContent = r.author || '익명';
+  document.getElementById('mLikeCount').textContent = r.likes || 0;
+  document.getElementById('mLikeBtn').classList.remove('liked');
+  document.getElementById('mTags').innerHTML = (r.tags || []).map(tagHTML).join('');
+  document.getElementById('detailModal').classList.add('active');
+}
+
+function closeModal(e) { if (e.target.id === 'detailModal') closeModalDirect(); }
+function closeModalDirect() { document.getElementById('detailModal').classList.remove('active'); }
+
+async function toggleModalLike() {
+  const btn = document.getElementById('mLikeBtn');
+  const liked = btn.classList.toggle('liked');
+  const count = document.getElementById('mLikeCount');
+  const newCount = parseInt(count.textContent) + (liked ? 1 : -1);
+  count.textContent = newCount;
+  if (currentModalId) await db.from('reviews').update({ likes: newCount }).eq('id', currentModalId);
+}
+
+let toastTimer;
+function showEmailVerificationScreen(email) {
+  // 마이 로그아웃 영역을 인증 안내로 교체
+  const loggedOut = document.getElementById('my-logged-out');
+  if (loggedOut) {
+    loggedOut.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;">
+        <div style="font-size:64px;margin-bottom:16px;">📧</div>
+        <h2 style="font-size:20px;font-weight:700;color:#2d1a0e;margin-bottom:12px;">이메일을 확인해주세요!</h2>
+        <p style="font-size:14px;color:#666;line-height:1.6;margin-bottom:8px;">
+          <strong style="color:#8B4513;">${email}</strong>으로<br>인증 메일을 보냈어요.
+        </p>
+        <p style="font-size:14px;color:#666;line-height:1.6;margin-bottom:24px;">
+          메일함을 열어서 인증 링크를 클릭하면<br>로그인할 수 있어요 🚕
+        </p>
+        <div style="background:#fff8f0;border:1px solid #f0d9c0;border-radius:12px;padding:16px 20px;margin-bottom:28px;width:100%;max-width:280px;">
+          <p style="font-size:13px;color:#8B4513;margin:0;">💡 메일이 안 보이면 스팸함도 확인해보세요!</p>
+        </div>
+        <button onclick="location.reload();" style="background:#8B4513;color:white;border:none;border-radius:12px;padding:14px 32px;font-size:15px;font-weight:600;cursor:pointer;">
+          인증 완료 후 로그인하기
+        </button>
+      </div>
+    `;
+  }
+  // 마이 탭으로 이동
+  switchNav('my');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+loadReviews();
+</script>
+</body>
+</html>
