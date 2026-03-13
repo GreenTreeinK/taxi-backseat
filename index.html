@@ -1261,7 +1261,7 @@ function loginWithKakao() {
   }
   // SDK v2.7.2+: Kakao.Auth.login() 제거됨 → authorize() 사용
   window.Kakao.Auth.authorize({
-    redirectUri: 'https://jocular-travesseiro-f9b589.netlify.app/',
+    redirectUri: 'https://greentreeink.github.io/taxi-backseat/',
     scope: 'profile_nickname,profile_image'
   });
 }
@@ -1278,7 +1278,7 @@ async function handleKakaoCallback(code) {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         client_id: '4b3c909db36393435377726603c24c47',
-        redirect_uri: 'https://jocular-travesseiro-f9b589.netlify.app/',
+        redirect_uri: 'https://greentreeink.github.io/taxi-backseat/',
         code: code
       })
     });
@@ -1352,7 +1352,7 @@ async function loginWithGoogle() {
   const { error } = await db.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'https://jocular-travesseiro-f9b589.netlify.app',
+      redirectTo: 'https://greentreeink.github.io/taxi-backseat',
       queryParams: {
         prompt: 'select_account'  // 매번 계정 선택 화면 강제 표시
       }
