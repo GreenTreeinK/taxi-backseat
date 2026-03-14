@@ -6,6 +6,7 @@
 <title>택시 뒷좌석 — 승객이 만드는 택시 리뷰</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
 <style>
 :root {
   --bg: #f7f4ef;
@@ -1159,16 +1160,79 @@ let currentFilter = 'all';
 let currentModalId = null;
 let currentUser = null;
 
-// ===== 카카오 로그인 (Supabase OAuth 방식) =====
-// Google과 동일하게 Supabase가 OAuth 흐름을 전부 처리합니다.
-async function loginWithKakao() {
-  const { error } = await db.auth.signInWithOAuth({
-    provider: 'kakao',
-    options: {
-      redirectTo: 'https://greentreeink.github.io/taxi-backseat/'
+// 카카오 세션 복원 (페이지 로드 시)
+const _savedKakao = localStorage.getItem('kakao_user');
+if (_savedKakao) {
+  try {
+    const ku = JSON.parse(_savedKakao);
+    currentUser = {
+      id: ku.id,
+      user_metadata: { full_name: ku.nickname, avatar_url: ku.profileImg, provider: 'kakao' },
+      provider: 'kakao'
+    };
+  } catch(e) { localStorage.removeItem('kakao_user'); }
+}
+
+// ===== 카카오 로그인 (JS SDK 팝업 방식 - 이메일 없이 동작) =====
+const KAKAO_JS_KEY = '40c9090dc969394353777260023c24c47';
+
+function initKakao() {
+  if (window.Kakao && !window.Kakao.isInitialized()) {
+    window.Kakao.init(KAKAO_JS_KEY);
+  }
+}
+
+function loginWithKakao() {
+  initKakao();
+  if (!window.Kakao || !window.Kakao.isInitialized()) {
+    showToast('카카오 SDK 로딩 중... 잠시 후 다시 시도해주세요');
+    setTimeout(loginWithKakao, 800);
+    return;
+  }
+  // 팝업 방식: 이메일 scope 없이 닉네임/프로필만 요청
+  window.Kakao.Auth.login({
+    scope: 'profile_nickname,profile_image',
+    success: async function(authObj) {
+      try {
+        // 액세스 토큰으로 사용자 정보 조회
+        window.Kakao.API.request({
+          url: '/v2/user/me',
+          success: function(res) {
+            const kakaoId = String(res.id);
+            const nickname = res.kakao_account?.profile?.nickname
+              || res.properties?.nickname || '카카오유저';
+            const profileImg = res.kakao_account?.profile?.profile_image_url
+              || res.properties?.profile_image || '';
+            // localStorage에 카카오 세션 저장
+            const kakaoUser = { id: kakaoId, nickname, profileImg, provider: 'kakao' };
+            localStorage.setItem('kakao_user', JSON.stringify(kakaoUser));
+            currentUser = {
+              id: kakaoId,
+              user_metadata: { full_name: nickname, avatar_url: profileImg, provider: 'kakao' },
+              provider: 'kakao'
+            };
+            updateMyPage();
+            showNicknameModal(nickname);
+          },
+          fail: function(err) {
+            showToast('사용자 정보 조회 실패 😢');
+            console.error(err);
+          }
+        });
+      } catch(e) {
+        showToast('카카오 로그인 오류 😢');
+        console.error(e);
+      }
+    },
+    fail: function(err) {
+      if (err.error === 'access_denied') {
+        showToast('로그인을 취소했어요');
+      } else {
+        showToast('카카오 로그인 실패: ' + (err.error_description || err.error));
+      }
+      console.error(err);
     }
   });
-  if (error) showToast('카카오 로그인 실패: ' + error.message);
 }
 
 async function loginWithGoogle() {
@@ -1182,8 +1246,10 @@ async function loginWithGoogle() {
   if (error) showToast('로그인 실패: ' + error.message);
 }
 
-// 인증 상태 감지 (카카오/구글 모두 여기서 처리)
+// 인증 상태 감지 (Google/이메일 로그인용 - 카카오는 별도 처리)
 db.auth.onAuthStateChange((event, session) => {
+  // 카카오 로컬 세션이 있으면 Supabase 세션으로 덮어쓰지 않음
+  if (localStorage.getItem('kakao_user')) return;
   currentUser = session?.user || null;
   updateMyPage();
   if (event === 'SIGNED_IN') {
@@ -1276,8 +1342,17 @@ async function signupWithEmail() {
 }
 
 async function logout() {
+  // 카카오 로그아웃
+  if (localStorage.getItem('kakao_user')) {
+    initKakao();
+    try { if (window.Kakao?.Auth?.getAccessToken()) window.Kakao.Auth.logout(); } catch(e) {}
+    localStorage.removeItem('kakao_user');
+  }
   await db.auth.signOut();
   localStorage.removeItem('taxi_nickname');
+  currentUser = null;
+  updateMyPage();
+  showToast('로그아웃되었어요');
 }
 
 async function goToMyReviews() {
