@@ -6,7 +6,7 @@
 <title>택시 뒷좌석 — 승객이 만드는 택시 리뷰</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
 <style>
 :root {
   --bg: #f7f4ef;
@@ -1160,8 +1160,9 @@ let currentFilter = 'all';
 let currentModalId = null;
 let currentUser = null;
 
-// ===== 카카오 로그인 (JS SDK + Supabase Edge Function) =====
+// ===== 카카오 로그인 (authorize 리다이렉트 방식 + Edge Function) =====
 const KAKAO_JS_KEY = '4b3c909db36393435377726603c24c47';
+const REDIRECT_URI = 'https://greentreeink.github.io/taxi-backseat/';
 
 function initKakao() {
   if (window.Kakao && !window.Kakao.isInitialized()) {
@@ -1171,50 +1172,59 @@ function initKakao() {
 
 function loginWithKakao() {
   initKakao();
-  if (!window.Kakao || !window.Kakao.isInitialized()) {
-    showToast('카카오 SDK 준비 중... 잠시 후 다시 눌러주세요');
+  // authorize로 카카오 로그인 페이지로 이동 (이메일 scope 제외)
+  window.Kakao.Auth.authorize({
+    redirectUri: REDIRECT_URI,
+    scope: 'profile_nickname,profile_image',
+  });
+}
+
+// 페이지 로드 시 카카오 인가코드(code) 감지
+async function handleKakaoRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+
+  if (error) {
+    // URL 정리
+    window.history.replaceState({}, '', REDIRECT_URI);
+    showToast('카카오 로그인을 취소했어요');
     return;
   }
-  window.Kakao.Auth.login({
-    scope: 'profile_nickname,profile_image',
-    success: async function(authObj) {
-      showToast('카카오 로그인 중...');
-      try {
-        // Edge Function 호출: 카카오 액세스 토큰 → Supabase 세션
-        const res = await fetch(
-          `${SUPABASE_URL}/functions/v1/kakao-auth`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${SUPABASE_KEY}`,
-            },
-            body: JSON.stringify({ kakao_access_token: authObj.access_token })
-          }
-        );
-        const data = await res.json();
-        if (data.error) { showToast('로그인 실패: ' + data.error); return; }
 
-        // Supabase 세션 직접 설정
-        const { error: setErr } = await db.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-        });
-        if (setErr) { showToast('세션 설정 실패 😢'); return; }
+  if (!code) return;
 
-        // 닉네임 저장 (카카오 닉네임 기본값)
-        showNicknameModal(data.user.nickname);
-      } catch(e) {
-        showToast('카카오 로그인 오류 😢');
-        console.error(e);
-      }
-    },
-    fail: function(err) {
-      if (err.error === 'access_denied') showToast('로그인을 취소했어요');
-      else showToast('카카오 로그인 실패 😢');
-      console.error(err);
-    }
-  });
+  // URL에서 code 파라미터 즉시 제거 (중복 처리 방지)
+  window.history.replaceState({}, '', REDIRECT_URI);
+
+  showToast('카카오 로그인 처리 중...');
+
+  try {
+    // Edge Function으로 code 전달 → 액세스 토큰 + Supabase 세션 받기
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/kakao-auth`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      },
+      body: JSON.stringify({ code, redirect_uri: REDIRECT_URI })
+    });
+
+    const data = await res.json();
+    if (data.error) { showToast('로그인 실패: ' + data.error); return; }
+
+    // Supabase 세션 설정
+    const { error: setErr } = await db.auth.setSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+    });
+    if (setErr) { showToast('세션 설정 실패 😢'); return; }
+
+    showNicknameModal(data.user?.nickname || '');
+  } catch(e) {
+    showToast('카카오 로그인 오류 😢');
+    console.error(e);
+  }
 }
 
 async function loginWithGoogle() {
@@ -1634,6 +1644,8 @@ function showToast(msg) {
 }
 
 loadReviews();
+// 카카오 로그인 리다이렉트 처리 (code 파라미터 감지)
+handleKakaoRedirect();
 </script>
 </body>
 </html>
