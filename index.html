@@ -6,6 +6,7 @@
 <title>택시 뒷좌석 — 승객이 만드는 택시 리뷰</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
 <style>
 :root {
   --bg: #f7f4ef;
@@ -1159,29 +1160,61 @@ let currentFilter = 'all';
 let currentModalId = null;
 let currentUser = null;
 
-// 카카오 세션 복원 (페이지 로드 시)
-const _savedKakao = localStorage.getItem('kakao_user');
-if (_savedKakao) {
-  try {
-    const ku = JSON.parse(_savedKakao);
-    currentUser = {
-      id: ku.id,
-      user_metadata: { full_name: ku.nickname, avatar_url: ku.profileImg, provider: 'kakao' },
-      provider: 'kakao'
-    };
-  } catch(e) { localStorage.removeItem('kakao_user'); }
+// ===== 카카오 로그인 (JS SDK + Supabase Edge Function) =====
+const KAKAO_JS_KEY = '40c9090dc969394353777260023c24c47';
+
+function initKakao() {
+  if (window.Kakao && !window.Kakao.isInitialized()) {
+    window.Kakao.init(KAKAO_JS_KEY);
+  }
 }
 
-// ===== 카카오 로그인 (Supabase OAuth, 이메일 scope 제외) =====
-async function loginWithKakao() {
-  const { error } = await db.auth.signInWithOAuth({
-    provider: 'kakao',
-    options: {
-      redirectTo: 'https://greentreeink.github.io/taxi-backseat/',
-      scopes: 'profile_nickname profile_image'  // 이메일 제외!
+function loginWithKakao() {
+  initKakao();
+  if (!window.Kakao || !window.Kakao.isInitialized()) {
+    showToast('카카오 SDK 준비 중... 잠시 후 다시 눌러주세요');
+    return;
+  }
+  window.Kakao.Auth.login({
+    scope: 'profile_nickname,profile_image',
+    success: async function(authObj) {
+      showToast('카카오 로그인 중...');
+      try {
+        // Edge Function 호출: 카카오 액세스 토큰 → Supabase 세션
+        const res = await fetch(
+          `${SUPABASE_URL}/functions/v1/kakao-auth`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+            },
+            body: JSON.stringify({ kakao_access_token: authObj.access_token })
+          }
+        );
+        const data = await res.json();
+        if (data.error) { showToast('로그인 실패: ' + data.error); return; }
+
+        // Supabase 세션 직접 설정
+        const { error: setErr } = await db.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        });
+        if (setErr) { showToast('세션 설정 실패 😢'); return; }
+
+        // 닉네임 저장 (카카오 닉네임 기본값)
+        showNicknameModal(data.user.nickname);
+      } catch(e) {
+        showToast('카카오 로그인 오류 😢');
+        console.error(e);
+      }
+    },
+    fail: function(err) {
+      if (err.error === 'access_denied') showToast('로그인을 취소했어요');
+      else showToast('카카오 로그인 실패 😢');
+      console.error(err);
     }
   });
-  if (error) showToast('카카오 로그인 실패: ' + error.message);
 }
 
 async function loginWithGoogle() {
@@ -1195,9 +1228,8 @@ async function loginWithGoogle() {
   if (error) showToast('로그인 실패: ' + error.message);
 }
 
-// 인증 상태 감지
+// 인증 상태 감지 (카카오/구글/이메일 모두 Supabase 세션으로 처리)
 db.auth.onAuthStateChange((event, session) => {
-  if (localStorage.getItem('kakao_user')) return;
   currentUser = session?.user || null;
   updateMyPage();
   if (event === 'SIGNED_IN') {
@@ -1290,9 +1322,8 @@ async function signupWithEmail() {
 }
 
 async function logout() {
-  localStorage.removeItem('kakao_user');
-  localStorage.removeItem('taxi_nickname');
   await db.auth.signOut();
+  localStorage.removeItem('taxi_nickname');
   currentUser = null;
   updateMyPage();
   showToast('로그아웃되었어요');
