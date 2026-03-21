@@ -2100,8 +2100,8 @@ function openDesktopDetail(safeR, cardEl) {
       </div>
     </div>
     <div style="padding:0 28px 28px;display:flex;flex-direction:column;align-items:center;gap:10px;">
-      ${(currentUser && (r.author === getNickname() || isAdmin())) ? `<button onclick="deleteMyReview('${r.id}')" style="background:#fff0ed;color:#c0602a;border:1.5px solid #e8c9b8;border-radius:12px;padding:10px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onmouseover="this.style.background='#ffe0d6'" onmouseout="this.style.background='#fff0ed'">🗑️ ${isAdmin() && r.author !== getNickname() ? '[관리자] ' : ''}이 후기 삭제하기</button>` : ''}
-      <button onclick="doDesktopSearch('${r.plate}')" style="background:var(--accent-light);color:var(--accent);border:1.5px solid var(--accent);border-radius:12px;padding:10px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">
+      ${(currentUser && (r.author === getNickname() || isAdmin())) ? `<button onclick="deleteMyReview('${r.id}')" style="width:260px;background:#fff0ed;color:#c0602a;border:1.5px solid #e8c9b8;border-radius:12px;padding:12px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onmouseover="this.style.background='#ffe0d6'" onmouseout="this.style.background='#fff0ed'">🗑️ ${isAdmin() && r.author !== getNickname() ? '[관리자] ' : ''}이 후기 삭제하기</button>` : ''}
+      <button onclick="doDesktopSearch('${r.plate}')" style="width:260px;background:var(--accent-light);color:var(--accent);border:1.5px solid var(--accent);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">
         🔍 이 번호판 후기 전체 보기
       </button>
       <div id="desktopSearchResults" style="width:100%;"></div>
