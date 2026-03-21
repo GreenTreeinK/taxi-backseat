@@ -117,18 +117,6 @@ body {
   .desktop-right-panel { display: none !important; }
 }
 
-/* STATUS */
-.status-bar {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 20px 4px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  background: var(--bg);
-}
-
 /* HEADER */
 .app-header {
   padding: 8px 20px 14px;
@@ -956,11 +944,6 @@ body {
 <body>
 <div class="phone-wrap">
 
-  <div class="status-bar">
-    <span style="font-family:monospace;">9:41</span>
-    <div style="display:flex;gap:6px;font-size:13px;">📶🔋</div>
-  </div>
-
   <div class="app-header">
     <div>
       <div class="logo"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:4px;">
@@ -980,7 +963,10 @@ body {
 </svg> 택시 뒷좌석</div>
       <div class="logo-sub">승객이 직접 만드는 택시 리뷰</div>
     </div>
-    <button class="write-btn" onclick="switchNav('write')">✏️ 후기 쓰기</button>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button class="write-btn" onclick="openDesktopWrite()" style="background:var(--accent);">✏️ 후기 쓰기</button>
+      <button class="write-btn" onclick="openDesktopMy()" style="background:var(--surface);color:var(--accent);border:1.5px solid var(--accent);">👤 마이</button>
+    </div>
   </div>
 
   <div class="scroll-area">
@@ -1728,12 +1714,40 @@ function getSelectedTags() {
 }
 
 function switchNav(tab) {
+  // 데스크탑이면 우측 패널로 처리
+  if (window.innerWidth >= 900) {
+    if (tab === 'write') { openDesktopWrite(); return; }
+    if (tab === 'my') { openDesktopMy(); return; }
+    if (tab === 'home') { loadReviews(); return; }
+  }
   document.querySelectorAll('.nav-screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('ns-' + tab).classList.add('active');
   document.getElementById('nav-' + tab)?.classList.add('active');
   document.querySelector('.scroll-area').scrollTop = 0;
   if (tab === 'home') loadReviews();
+}
+
+// 데스크탑 후기쓰기 → 우측 패널
+function openDesktopWrite() {
+  if (window.innerWidth < 900) { switchNav('write'); return; }
+  // ns-write 내용을 우측 패널에 복사해서 표시
+  const writeContent = document.getElementById('ns-write').innerHTML;
+  const panel = document.getElementById('desktopRightContent');
+  panel.style.display = 'block';
+  panel.style.height = 'auto';
+  panel.innerHTML = `<div style="padding:20px 28px;">${writeContent}</div>`;
+}
+
+// 데스크탑 마이 → 우측 패널
+function openDesktopMy() {
+  if (window.innerWidth < 900) { switchNav('my'); return; }
+  updateMyPage();
+  const myContent = document.getElementById('ns-my').innerHTML;
+  const panel = document.getElementById('desktopRightContent');
+  panel.style.display = 'block';
+  panel.style.height = 'auto';
+  panel.innerHTML = `<div style="padding:20px 28px;">${myContent}</div>`;
 }
 
 function formatDate(d) {
