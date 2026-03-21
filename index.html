@@ -46,6 +46,77 @@ body {
   box-shadow: 0 0 60px rgba(0,0,0,0.12);
 }
 
+/* ===== 데스크탑 2단 레이아웃 ===== */
+@media (min-width: 900px) {
+  body {
+    align-items: flex-start;
+    padding: 0;
+  }
+  .phone-wrap {
+    max-width: 100%;
+    width: 100%;
+    min-height: 100vh;
+    box-shadow: none;
+    background: var(--bg);
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+  /* 헤더 - 전체 너비 */
+  .status-bar { display: none; }
+  .app-header {
+    padding: 14px 32px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    grid-column: 1 / -1;
+  }
+  /* 스크롤 영역 + 우측패널 = 2단 */
+  .scroll-area {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    overflow: hidden;
+    height: calc(100vh - 65px);
+  }
+  /* 왼쪽: 홈 화면만 보임 */
+  #ns-home {
+    display: block !important;
+    overflow-y: auto;
+    border-right: 1.5px solid var(--border);
+    height: calc(100vh - 65px);
+    scrollbar-width: none;
+    animation: none !important;
+  }
+  #ns-home::-webkit-scrollbar { display: none; }
+  /* 오른쪽 패널 - scroll-area의 두 번째 컬럼 */
+  .desktop-right-panel {
+    display: flex !important;
+    flex-direction: column;
+    overflow-y: auto;
+    background: var(--surface);
+    height: calc(100vh - 65px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    grid-column: 2;
+    grid-row: 1;
+  }
+  /* 모바일 전용 화면 숨김 */
+  #ns-search, #ns-write, #ns-my { display: none !important; }
+  /* 바텀 네비 숨김 */
+  .bottom-nav { display: none !important; }
+  /* 활성 후기 카드 강조 */
+  .review-card.desktop-active {
+    border-color: var(--accent) !important;
+    background: var(--accent-light) !important;
+    border-left: 3px solid var(--accent) !important;
+  }
+}
+
+/* 모바일: 데스크탑 패널 완전 숨김 */
+@media (max-width: 899px) {
+  .desktop-right-panel { display: none !important; }
+}
+
 /* STATUS */
 .status-bar {
   display: flex;
@@ -112,6 +183,48 @@ body {
   letter-spacing: 0.8px;
   text-transform: uppercase;
   margin-bottom: 10px;
+}
+.plate-input-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 2fr auto;
+  gap: 6px;
+  align-items: center;
+}
+.plate-select {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 6px;
+  font-size: 13px;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: center;
+}
+.plate-select:focus { border-color: var(--accent); background: #fff; }
+.plate-num-input {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 8px;
+  font-size: 13px;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  outline: none;
+  text-align: center;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+.plate-num-input:focus { border-color: var(--accent); background: #fff; }
+.plate-num-input::placeholder { color: var(--text-muted); }
+/* 후기 작성 번호판 (버튼 없어서 4컬럼) */
+.write-screen .plate-input-grid {
+  grid-template-columns: 2fr 1fr 1fr 2fr;
 }
 .search-box { display: flex; gap: 8px; }
 .search-input {
@@ -594,7 +707,7 @@ body {
 }
 /* AI 요약 */
 .ai-summary-btn {
-  width: 100%;
+  width: calc(100% - 40px);
   background: linear-gradient(135deg, #6c3bff 0%, #a259ff 100%);
   color: #fff;
   border: none;
@@ -876,8 +989,44 @@ body {
     <div class="nav-screen active" id="ns-home">
       <div class="search-section">
         <div class="search-label">🔍 번호판 검색</div>
-        <div class="search-box">
-          <input class="search-input" type="text" id="searchInput" placeholder="예) 서울 12가 3456">
+        <div class="plate-input-grid">
+          <select class="plate-select" id="searchRegion">
+            <option value="">지역</option>
+            <option>서울</option><option>경기</option><option>인천</option>
+            <option>부산</option><option>대구</option><option>광주</option>
+            <option>대전</option><option>울산</option><option>세종</option>
+            <option>강원</option><option>충북</option><option>충남</option>
+            <option>전북</option><option>전남</option><option>경북</option>
+            <option>경남</option><option>제주</option>
+          </select>
+          <select class="plate-select" id="searchNum1">
+            <option value="">00</option>
+            <option>01</option><option>02</option><option>03</option><option>04</option><option>05</option>
+            <option>06</option><option>07</option><option>08</option><option>09</option><option>10</option>
+            <option>11</option><option>12</option><option>13</option><option>14</option><option>15</option>
+            <option>16</option><option>17</option><option>18</option><option>19</option><option>20</option>
+            <option>21</option><option>22</option><option>23</option><option>24</option><option>25</option>
+            <option>26</option><option>27</option><option>28</option><option>29</option><option>30</option>
+            <option>31</option><option>32</option><option>33</option><option>34</option><option>35</option>
+            <option>36</option><option>37</option><option>38</option><option>39</option><option>40</option>
+            <option>41</option><option>42</option><option>43</option><option>44</option><option>45</option>
+            <option>46</option><option>47</option><option>48</option><option>49</option><option>50</option>
+            <option>51</option><option>52</option><option>53</option><option>54</option><option>55</option>
+            <option>56</option><option>57</option><option>58</option><option>59</option><option>60</option>
+            <option>61</option><option>62</option><option>63</option><option>64</option><option>65</option>
+            <option>66</option><option>67</option><option>68</option><option>69</option><option>70</option>
+            <option>71</option><option>72</option><option>73</option><option>74</option><option>75</option>
+            <option>76</option><option>77</option><option>78</option><option>79</option><option>80</option>
+            <option>81</option><option>82</option><option>83</option><option>84</option><option>85</option>
+            <option>86</option><option>87</option><option>88</option><option>89</option><option>90</option>
+            <option>91</option><option>92</option><option>93</option><option>94</option><option>95</option>
+            <option>96</option><option>97</option><option>98</option><option>99</option>
+          </select>
+          <select class="plate-select" id="searchChar">
+            <option value="">--</option>
+            <option>아</option><option>바</option><option>사</option><option>자</option>
+          </select>
+          <input class="plate-num-input" type="number" id="searchNum2" placeholder="0000" min="1000" max="9999" maxlength="4">
           <button class="search-btn" onclick="doSearch()">검색</button>
         </div>
       </div>
@@ -924,6 +1073,18 @@ body {
       <div style="height:20px;"></div>
     </div>
 
+
+  <!-- 데스크탑 우측 패널: scroll-area 2번째 컬럼 -->
+  <div class="desktop-right-panel" id="desktopRightPanel">
+    <div id="desktopRightContent" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;">
+      <div style="color:var(--text-muted);padding:40px;text-align:center;">
+        <div style="font-size:48px;margin-bottom:16px;">🚕</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text-soft);">번호판을 검색해보세요</div>
+        <div style="font-size:13px;line-height:1.7;">왼쪽에서 번호판을 검색하거나<br>후기를 클릭하면 상세내용이 여기에 표시돼요</div>
+      </div>
+    </div>
+  </div>
+
     <!-- 검색결과 -->
     <div class="nav-screen" id="ns-search">
       <div class="search-result-header">
@@ -961,7 +1122,94 @@ body {
           <div class="form-section-title"><span>🚕</span> 차량 정보</div>
           <div class="form-field">
             <label class="form-label">번호판 *</label>
-            <input class="form-input" type="text" id="wPlate" placeholder="예) 서울 12가 3456">
+            <div class="plate-input-grid">
+              <select class="plate-select" id="wPlateRegion">
+                <option value="">지역</option>
+                <option>서울</option><option>경기</option><option>인천</option>
+                <option>부산</option><option>대구</option><option>광주</option>
+                <option>대전</option><option>울산</option><option>세종</option>
+                <option>강원</option><option>충북</option><option>충남</option>
+                <option>전북</option><option>전남</option><option>경북</option>
+                <option>경남</option><option>제주</option>
+              </select>
+              <select class="plate-select" id="wPlateNum1">
+                <option value="">--</option>
+            <option>01</option>
+            <option>02</option>
+            <option>03</option>
+            <option>04</option>
+            <option>05</option>
+            <option>06</option>
+            <option>07</option>
+            <option>08</option>
+            <option>09</option>
+            <option>10</option>
+            <option>11</option>
+            <option>12</option>
+            <option>13</option>
+            <option>14</option>
+            <option>15</option>
+            <option>16</option>
+            <option>17</option>
+            <option>18</option>
+            <option>19</option>
+            <option>20</option>
+            <option>21</option>
+            <option>22</option>
+            <option>23</option>
+            <option>24</option>
+            <option>25</option>
+            <option>26</option>
+            <option>27</option>
+            <option>28</option>
+            <option>29</option>
+            <option>30</option>
+            <option>31</option>
+            <option>32</option>
+            <option>33</option>
+            <option>34</option>
+            <option>35</option>
+            <option>36</option>
+            <option>37</option>
+            <option>38</option>
+            <option>39</option>
+            <option>40</option>
+            <option>41</option>
+            <option>42</option>
+            <option>43</option>
+            <option>44</option>
+            <option>45</option>
+            <option>46</option>
+            <option>47</option>
+            <option>48</option>
+            <option>49</option>
+            <option>50</option>
+            <option>51</option>
+            <option>52</option>
+            <option>53</option>
+            <option>54</option>
+            <option>55</option>
+            <option>56</option>
+            <option>57</option>
+            <option>58</option>
+            <option>59</option>
+            <option>60</option>
+            <option>61</option>
+            <option>62</option>
+            <option>63</option>
+            <option>64</option>
+            <option>65</option>
+            <option>66</option>
+            <option>67</option>
+            <option>68</option>
+            <option>69</option>
+              </select>
+              <select class="plate-select" id="wPlateChar">
+                <option value="">--</option>
+            <option>아</option><option>바</option><option>사</option><option>자</option>
+              </select>
+              <input class="plate-num-input" type="number" id="wPlateNum2" placeholder="0000" min="1000" max="9999" maxlength="4">
+            </div>
           </div>
           <div class="form-field">
             <label class="form-label">탑승 지역</label>
@@ -1157,7 +1405,7 @@ body {
       <div style="height:20px;"></div>
     </div>
 
-  </div>
+  </div><!-- scroll-area end -->
 
   <div class="bottom-nav">
     <div class="nav-item active" id="nav-home" onclick="switchNav('home')">
@@ -1505,8 +1753,10 @@ function reviewCardHTML(r) {
   const type = getCardType(r.rating);
   const tags = (r.tags || []).map(tagHTML).join('');
   const safeR = encodeURIComponent(JSON.stringify(r));
+  const isDesktop = window.innerWidth >= 900;
+  const clickFn = isDesktop ? `openDesktopDetail('${safeR}', this)` : `openModalFromStr('${safeR}')`;
   return `
-    <div class="review-card ${type}" onclick="openModalFromStr('${safeR}')">
+    <div class="review-card ${type}" onclick="${clickFn}">
       <div class="card-header">
         <div class="plate-badge">
           <div class="plate">${r.plate}</div>
@@ -1524,6 +1774,122 @@ function reviewCardHTML(r) {
         <span class="card-likes" onclick="event.stopPropagation(); quickLike(this, '${r.id}', ${r.likes || 0})">👍 ${r.likes || 0}</span>
       </div>
     </div>`;
+}
+
+// 데스크탑 우측 패널에 후기 상세 표시
+function openDesktopDetail(safeR, cardEl) {
+  if (window.innerWidth < 900) { openModalFromStr(safeR); return; }
+  const r = JSON.parse(decodeURIComponent(safeR));
+  // 활성 카드 표시
+  document.querySelectorAll('.review-card').forEach(c => c.classList.remove('desktop-active'));
+  if (cardEl) cardEl.classList.add('desktop-active');
+
+  const tags = (r.tags || []).map(tagHTML).join('');
+  const panel = document.getElementById('desktopRightContent');
+  panel.style.display = 'block';
+  panel.style.height = 'auto';
+  panel.innerHTML = `
+    <div style="padding:28px 28px 20px;">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;letter-spacing:0.5px;">선택된 후기</div>
+      <div style="font-size:28px;font-weight:900;color:var(--accent);font-family:'Black Han Sans',sans-serif;margin-bottom:16px;">${r.plate}</div>
+      <div style="display:flex;gap:20px;margin-bottom:20px;">
+        <div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--accent);">${r.rating}</div><div style="font-size:11px;color:var(--text-muted);">별점</div></div>
+        <div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--text);">${formatDate(r.created_at)}</div><div style="font-size:11px;color:var(--text-muted);">작성일</div></div>
+        ${r.region ? `<div style="text-align:center;"><div style="font-size:16px;font-weight:700;color:var(--text-soft);">${r.region}</div><div style="font-size:11px;color:var(--text-muted);">지역</div></div>` : ''}
+      </div>
+    </div>
+    <div style="padding:0 28px 20px;">
+      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:18px;">
+        <div style="font-size:22px;margin-bottom:8px;">${starsToEmoji(r.rating)}</div>
+        ${tags ? `<div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px;">${tags}</div>` : ''}
+        <div style="font-size:15px;line-height:1.8;color:var(--text);margin-bottom:12px;">${r.content}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border);">
+          <span style="font-size:13px;color:var(--text-muted);">${r.author || '익명'}</span>
+          <span style="font-size:13px;color:var(--text-muted);">👍 ${r.likes || 0}</span>
+        </div>
+      </div>
+    </div>
+    <div style="padding:0 28px 28px;">
+      <button onclick="doDesktopSearch('${r.plate}')" style="width:100%;background:var(--accent-light);color:var(--accent);border:1.5px solid var(--accent);border-radius:12px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-bottom:10px;">
+        🔍 이 번호판 후기 전체 보기
+      </button>
+      <div id="desktopSearchResults"></div>
+    </div>
+  `;
+}
+
+// 데스크탑에서 번호판 전체 후기 우측 패널에 표시
+async function doDesktopSearch(plateVal) {
+  if (window.innerWidth < 900) { doSearch(); return; }
+  const panel = document.getElementById('desktopRightContent');
+  const resultsDiv = document.getElementById('desktopSearchResults');
+  if (!resultsDiv) return;
+  resultsDiv.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">⏳ 검색 중...</div>';
+  try {
+    const { data, error } = await db.from('reviews').select('*').eq('plate', plateVal).order('created_at', { ascending: false });
+    if (error) throw error;
+    const reviews = data || [];
+    const avg = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : '-';
+    resultsDiv.innerHTML = `
+      <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">📊 ${plateVal} 통계</div>
+        <div style="display:flex;gap:16px;">
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--text);">${reviews.length}</div><div style="font-size:11px;color:var(--text-muted);">총 리뷰</div></div>
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--accent);">${avg}</div><div style="font-size:11px;color:var(--text-muted);">평균별점</div></div>
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:#e74c3c;">${reviews.filter(r=>r.rating<=2).length}</div><div style="font-size:11px;color:var(--text-muted);">나쁜리뷰</div></div>
+        </div>
+        <button onclick="doDesktopAiSummary('${plateVal}')" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#6c3bff,#a259ff);color:#fff;border:none;border-radius:10px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">✨ AI로 후기 요약하기</button>
+        <div id="desktopAiBox" style="display:none;margin-top:8px;background:#f0ebff;border:1px solid #c4a8ff;border-radius:10px;padding:12px;">
+          <div style="font-size:10px;color:#6c3bff;font-weight:700;margin-bottom:4px;">🤖 AI 요약</div>
+          <div id="desktopAiText" style="font-size:13px;color:#3a2060;line-height:1.7;"></div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;padding:0 2px;">후기 목록</div>
+      ${reviews.map(r => {
+        const tags = (r.tags||[]).map(tagHTML).join('');
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:14px;">${starsToEmoji(r.rating)}</span>
+            <span style="font-size:11px;color:var(--text-muted);">${formatDate(r.created_at)}</span>
+          </div>
+          ${tags ? `<div style="margin-bottom:7px;display:flex;flex-wrap:wrap;gap:4px;">${tags}</div>` : ''}
+          <div style="font-size:13px;line-height:1.7;color:var(--text);margin-bottom:8px;">${r.content}</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
+            <span>${r.author||'익명'}</span>
+            <span>👍 ${r.likes||0}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    `;
+    // AI 요약 데이터 저장
+    window._desktopSearchReviews = reviews;
+    window._desktopSearchPlate = plateVal;
+  } catch(e) {
+    resultsDiv.innerHTML = `<div style="color:var(--text-muted);font-size:13px;">검색 실패: ${e.message}</div>`;
+  }
+}
+
+// 데스크탑 AI 요약
+async function doDesktopAiSummary(plateVal) {
+  const reviews = window._desktopSearchReviews;
+  if (!reviews || !reviews.length) return;
+  const aiBox = document.getElementById('desktopAiBox');
+  const aiText = document.getElementById('desktopAiText');
+  aiBox.style.display = 'block';
+  aiText.textContent = 'AI가 분석 중이에요... 🤖';
+  const reviewSummary = reviews.map(r => `[별점 ${r.rating}점] ${(r.tags||[]).join(',')} | ${r.content}`).join('\n');
+  const avg = (reviews.reduce((s,r) => s+r.rating, 0)/reviews.length).toFixed(1);
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-summary`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ plate: plateVal, avgRating: avg, reviewCount: reviews.length, reviews: reviewSummary })
+    });
+    const data = await res.json();
+    aiText.textContent = data.summary || '요약 실패';
+  } catch(e) {
+    aiText.textContent = '요약을 불러올 수 없어요.';
+  }
 }
 
 async function loadReviews() {
@@ -1560,9 +1926,48 @@ function filterChip(el, type) {
   loadReviews();
 }
 
+function getSearchPlate() {
+  const r = document.getElementById('searchRegion').value;
+  const n1 = document.getElementById('searchNum1').value;
+  const c = document.getElementById('searchChar').value;
+  const n2 = document.getElementById('searchNum2').value;
+  return `${r} ${n1}${c} ${n2}`;
+}
+
+function getWritePlate() {
+  const r = document.getElementById('wPlateRegion').value;
+  const n1 = document.getElementById('wPlateNum1').value;
+  const c = document.getElementById('wPlateChar').value;
+  const n2 = document.getElementById('wPlateNum2').value;
+  return `${r} ${n1}${c} ${n2}`;
+}
+
 async function doSearch() {
-  const val = document.getElementById('searchInput').value.trim();
-  if (!val) { showToast('번호판을 입력해주세요 🔍'); return; }
+  const region = document.getElementById('searchRegion').value;
+  const num1 = document.getElementById('searchNum1').value;
+  const char = document.getElementById('searchChar').value;
+  const num2 = document.getElementById('searchNum2').value;
+  if (!region || !num1 || !char || !num2) {
+    showToast('번호판을 모두 선택해주세요 🔍'); return;
+  }
+  const val = getSearchPlate();
+
+  // 데스크탑이면 우측 패널에 바로 표시
+  if (window.innerWidth >= 900) {
+    // 우측 패널에 검색 결과 표시
+    const panel = document.getElementById('desktopRightContent');
+    panel.style.display = 'block';
+    panel.style.height = 'auto';
+    panel.innerHTML = `<div style="padding:28px;">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">검색 결과</div>
+      <div style="font-size:28px;font-weight:900;color:var(--accent);font-family:'Black Han Sans',sans-serif;margin-bottom:16px;">${val}</div>
+      <div id="desktopSearchResults"><div style="text-align:center;padding:20px;color:var(--text-muted);">⏳ 검색 중...</div></div>
+    </div>`;
+    window._desktopSearchPlate = val;
+    await doDesktopSearch(val);
+    return;
+  }
+
   document.getElementById('srPlate').textContent = val;
   switchNav('search');
   // AI 요약 초기화
@@ -1572,7 +1977,7 @@ async function doSearch() {
   const list = document.getElementById('searchResultList');
   list.innerHTML = '<div class="loading-wrap"><span class="loading-spinner">⏳</span><div>검색 중...</div></div>';
   try {
-    const { data, error } = await db.from('reviews').select('*').ilike('plate', `%${val}%`).order('created_at', { ascending: false });
+    const { data, error } = await db.from('reviews').select('*').eq('plate', val).order('created_at', { ascending: false });
     if (error) throw error;
     const reviews = data || [];
     document.getElementById('srTotal').textContent = reviews.length;
@@ -1581,7 +1986,6 @@ async function doSearch() {
       document.getElementById('srAvg').textContent = avg;
       document.getElementById('srBad').textContent = reviews.filter(r => r.rating <= 2).length;
       document.getElementById('srGood').textContent = reviews.filter(r => r.rating >= 4).length;
-      // 후기가 있을 때만 AI 버튼 표시
       window._currentSearchReviews = reviews;
       document.getElementById('aiSummaryBtn').style.display = 'flex';
     } else {
@@ -1610,53 +2014,55 @@ async function doAiSummary() {
 
   btn.disabled = true;
   btn.innerHTML = '✨ AI가 분석 중...';
+  box.style.display = 'block';
+  textEl.textContent = '잠시만요, AI가 후기를 읽고 있어요... 🤖';
 
-  // AI에게 보낼 후기 데이터 정리
   const reviewSummary = reviews.map(r =>
-    `[별점 ${r.rating}점] ${r.tags?.join(', ')} | ${r.content}`
+    `[별점 ${r.rating}점] 태그: ${(r.tags||[]).join(', ')} | 내용: ${r.content}`
   ).join('\n');
 
   const plate = document.getElementById('srPlate').textContent;
   const avgRating = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Supabase Edge Function을 통해 Claude AI 호출
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-summary`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 300,
-        system: `당신은 택시 후기를 분석하는 AI예요. 승객들의 후기를 읽고 핵심을 간결하게 한국어로 요약해주세요. 
-        친근하고 따뜻한 말투를 사용하고, 2~3문장으로 요약해주세요.
-        긍정적인 점과 주의할 점을 균형있게 알려주세요.
-        이모지를 적절히 사용해주세요.`,
-        messages: [{
-          role: 'user',
-          content: `번호판 [${plate}] 택시에 대한 후기 ${reviews.length}건 (평균 별점: ${avgRating}점):\n\n${reviewSummary}\n\n이 후기들을 요약해주세요.`
-        }]
+        plate,
+        avgRating,
+        reviewCount: reviews.length,
+        reviews: reviewSummary
       })
     });
 
     const data = await response.json();
-    const summary = data.content?.[0]?.text || '요약을 생성할 수 없어요.';
+    if (data.error) throw new Error(data.error);
 
-    textEl.textContent = summary;
-    box.style.display = 'block';
+    textEl.textContent = data.summary;
     btn.innerHTML = '✨ AI 요약 새로고침';
     btn.disabled = false;
   } catch(e) {
-    showToast('AI 요약 실패 😢');
+    textEl.textContent = '요약을 불러올 수 없어요. 잠시 후 다시 시도해주세요.';
     btn.innerHTML = '✨ AI로 후기 요약하기';
     btn.disabled = false;
   }
 }
 
-document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+document.getElementById('searchNum2').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
 async function submitReview() {
-  const plate = document.getElementById('wPlate').value.trim();
+  const plate = getWritePlate();
+  const region_val = document.getElementById('wPlateRegion').value;
+  const num1_val = document.getElementById('wPlateNum1').value;
+  const char_val = document.getElementById('wPlateChar').value;
+  const num2_val = document.getElementById('wPlateNum2').value;
   const content = document.getElementById('wContent').value.trim();
-  if (!plate) { showToast('번호판을 입력해주세요 🚕'); return; }
+  if (!region_val || !num1_val || !char_val || !num2_val) { showToast('번호판을 모두 선택해주세요 🚕'); return; }
   if (!selectedStar) { showToast('별점을 선택해주세요 ⭐'); return; }
   if (!content) { showToast('후기 내용을 입력해주세요 ✏️'); return; }
   if (!currentUser) { showToast('로그인 후 후기를 작성할 수 있어요 🙏'); switchNav('my'); return; }
@@ -1670,7 +2076,10 @@ async function submitReview() {
     });
     if (error) throw error;
     showToast('후기가 등록되었습니다! 🎉');
-    document.getElementById('wPlate').value = '';
+    document.getElementById('wPlateRegion').value = '';
+    document.getElementById('wPlateNum1').value = '';
+    document.getElementById('wPlateChar').value = '';
+    document.getElementById('wPlateNum2').value = '';
     document.getElementById('wRegionSido').value = '';
     document.getElementById('wRegionDistrict').innerHTML = '<option value="">구/군 선택</option>';
     document.getElementById('wContent').value = '';
