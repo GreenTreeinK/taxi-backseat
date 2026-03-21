@@ -74,7 +74,7 @@ body {
   /* 스크롤 영역 + 우측패널 = 2단 */
   .scroll-area {
     display: grid;
-    grid-template-columns: 360px 1fr;
+    grid-template-columns: 280px 1fr;
     overflow: hidden;
     height: calc(100vh - 65px);
   }
@@ -1873,9 +1873,9 @@ function openDesktopWrite() {
   panel.style.display = 'block';
   panel.style.height = 'auto';
   panel.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1.4fr;min-height:calc(100vh - 65px);background:var(--bg);">
+    <div style="display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - 65px);background:var(--bg);">
       <!-- 왼쪽: 안내 패널 -->
-      <div style="background:var(--accent);padding:48px 36px;display:flex;flex-direction:column;justify-content:center;">
+      <div style="background:var(--accent);padding:40px 28px;display:flex;flex-direction:column;justify-content:center;">
         <div style="font-size:40px;margin-bottom:20px;">🚕</div>
         <div style="font-size:24px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:16px;">
           솔직한 후기로<br>더 안전한 택시를
@@ -1918,8 +1918,8 @@ function openDesktopMy() {
   if (!currentUser) {
     // 로그인 화면 - 2단 레이아웃
     panel.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1.2fr;min-height:calc(100vh - 65px);background:var(--bg);">
-        <div style="background:linear-gradient(160deg, var(--accent) 0%, #8b3a1a 100%);padding:48px 36px;display:flex;flex-direction:column;justify-content:center;">
+      <div style="display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - 65px);background:var(--bg);">
+        <div style="background:linear-gradient(160deg, var(--accent) 0%, #8b3a1a 100%);padding:40px 28px;display:flex;flex-direction:column;justify-content:center;">
           <div style="font-size:40px;margin-bottom:20px;">😊</div>
           <div style="font-size:24px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:16px;">
             택시 뒷좌석에<br>오신 것을 환영해요
@@ -1928,7 +1928,7 @@ function openDesktopMy() {
             로그인하면 후기 작성, 내 후기 관리 등<br>모든 기능을 이용할 수 있어요.
           </div>
         </div>
-        <div style="padding:48px 36px;display:flex;flex-direction:column;justify-content:center;">
+        <div style="padding:40px 28px;display:flex;flex-direction:column;justify-content:center;">
           <div style="max-width:320px;margin:0 auto;width:100%;">
             ${document.getElementById('ns-my').innerHTML}
           </div>
