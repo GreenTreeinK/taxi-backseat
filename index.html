@@ -1570,8 +1570,18 @@ db.auth.onAuthStateChange((event, session) => {
 });
 
 function showNicknameModal(defaultNickname = '') {
+  // localStorage 확인
   const saved = localStorage.getItem('taxi_nickname');
   if (saved) {
+    showToast('로그인되었어요! 🎉');
+    if (window.innerWidth >= 900) openDesktopMy();
+    else switchNav('my');
+    return;
+  }
+  // Supabase user_metadata에 저장된 닉네임 확인 (이전에 설정한 적 있으면 복원)
+  const metaNick = currentUser?.user_metadata?.taxi_nickname;
+  if (metaNick) {
+    localStorage.setItem('taxi_nickname', metaNick);
     showToast('로그인되었어요! 🎉');
     if (window.innerWidth >= 900) openDesktopMy();
     else switchNav('my');
@@ -1584,19 +1594,35 @@ function showNicknameModal(defaultNickname = '') {
   input.select();
 }
 
-function saveNickname() {
+async function saveNickname() {
   const val = document.getElementById('nicknameInput').value.trim();
   if (val.length < 2) { showToast('닉네임은 2자 이상이에요'); return; }
+  // localStorage에 저장
   localStorage.setItem('taxi_nickname', val);
+  // Supabase user_metadata에도 저장 (로그아웃 후 재로그인 시 복원용)
+  if (currentUser) {
+    await db.auth.updateUser({ data: { taxi_nickname: val } });
+  }
   document.getElementById('nicknameModal').classList.remove('active');
   showToast('닉네임이 설정됐어요! 🎉');
   updateMyPage();
-  switchNav('my');
+  if (window.innerWidth >= 900) openDesktopMy();
+  else switchNav('my');
 }
 
 function getNickname() {
-  return localStorage.getItem('taxi_nickname') ||
-    currentUser?.user_metadata?.full_name ||
+  // 1순위: localStorage
+  const local = localStorage.getItem('taxi_nickname');
+  if (local) return local;
+  // 2순위: Supabase user_metadata에 저장된 taxi_nickname
+  const meta = currentUser?.user_metadata?.taxi_nickname;
+  if (meta) {
+    // 복원해서 localStorage에도 다시 저장
+    localStorage.setItem('taxi_nickname', meta);
+    return meta;
+  }
+  // 3순위: 소셜 로그인 이름
+  return currentUser?.user_metadata?.full_name ||
     currentUser?.user_metadata?.name ||
     currentUser?.email?.split('@')[0] || '익명';
 }
@@ -1643,12 +1669,11 @@ async function signupWithEmail() {
 
 async function logout() {
   await db.auth.signOut();
-  localStorage.removeItem('taxi_nickname');
+  // taxi_nickname은 지우지 않음 — 재로그인 시 닉네임 팝업 방지
   currentUser = null;
   updateMyPage();
   showToast('로그아웃되었어요');
   if (window.innerWidth >= 900) {
-    // 데스크탑: 우측 패널을 기본 안내 화면으로 초기화
     const panel = document.getElementById('desktopRightContent');
     if (panel) {
       panel.innerHTML = `
