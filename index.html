@@ -74,7 +74,7 @@ body {
   /* 스크롤 영역 + 우측패널 = 2단 */
   .scroll-area {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 340px 1fr;
     overflow: hidden;
     height: calc(100vh - 65px);
   }
@@ -663,12 +663,12 @@ body {
 }
 .login-title {
   font-family: 'Black Han Sans', sans-serif;
-  font-size: 22px;
+  font-size: 24px;
   color: var(--text);
   text-align: center;
 }
 .login-sub {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-muted);
   text-align: center;
   line-height: 1.7;
@@ -678,8 +678,8 @@ body {
   background: #fff;
   border: 1.5px solid var(--border);
   border-radius: 14px;
-  padding: 14px 20px;
-  font-size: 15px;
+  padding: 16px 20px;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   font-family: 'Noto Sans KR', sans-serif;
@@ -756,8 +756,8 @@ body {
   background: #FEE500;
   border: none;
   border-radius: 14px;
-  padding: 14px 20px;
-  font-size: 15px;
+  padding: 16px 20px;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   font-family: 'Noto Sans KR', sans-serif;
@@ -784,8 +784,8 @@ body {
 }
 .auth-tab {
   flex: 1;
-  padding: 10px;
-  font-size: 14px;
+  padding: 13px;
+  font-size: 15px;
   font-weight: 700;
   font-family: 'Noto Sans KR', sans-serif;
   cursor: pointer;
@@ -806,10 +806,10 @@ body {
 }
 .auth-input {
   width: 100%;
-  padding: 13px 16px;
+  padding: 15px 16px;
   border: 1.5px solid var(--border);
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 16px;
   font-family: 'Noto Sans KR', sans-serif;
   background: #faf9f7;
   color: var(--text);
@@ -827,7 +827,7 @@ body {
   color: #fff;
   border: none;
   border-radius: 14px;
-  padding: 14px;
+  padding: 16px;
   font-size: 15px;
   font-weight: 700;
   font-family: 'Noto Sans KR', sans-serif;
@@ -1899,7 +1899,7 @@ function openDesktopMy() {
     // 로그인 화면 - 2단 레이아웃
     panel.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 65px);background:var(--bg);padding:40px;">
-        <div style="width:100%;max-width:480px;">
+        <div style="width:100%;max-width:560px;">
           ${document.getElementById('ns-my').innerHTML}
         </div>
       </div>`;
